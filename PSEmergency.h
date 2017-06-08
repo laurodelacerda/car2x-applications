@@ -10,7 +10,6 @@ using namespace omnetpp;
 class PSEmergency : public BaseWaveApplLayer {
 
     public:
-        PSEmergency();
         virtual void initialize(int stage);
         virtual void finish();
 
@@ -28,13 +27,13 @@ class PSEmergency : public BaseWaveApplLayer {
         virtual void handlePositionUpdate(cObject* obj);
 
         // functions that emulate a GPS
-        std::string formatRoad(std::string road);
-        std::string formatLane(int lane);
-        std::string getCourse(int maxNumberOfRoads);
-        bool onRoute(std::string course);
+        virtual std::string formatRoad(std::string road);
+        virtual std::string formatLane(int lane);
+        virtual std::string getCourse(int maxNumberOfRoads);
+        virtual bool onRoute(std::string course);
 
         // functions that emulate a Driver
-        void changeLane();
+        virtual void changeLane();
 
     };
 

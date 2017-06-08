@@ -117,22 +117,19 @@ void PSEmergency::handlePositionUpdate(cObject* obj) {
     //member variables such as currentPosition and currentSpeed are updated in the parent class
 
     if (onDuty){
-        std::cout<< "Hey, I am on duty!" << std::endl;
         findHost()->getDisplayString().updateWith("r=16,red");
 
         WaveShortMessage* wsm = new WaveShortMessage();
 
         populateWSM(wsm);
 
-        std::cout<< getCourse(numberOfRoads) << std::endl;
-        // Adds the future course to the wsm
+        std::cout<< "I am vehicle number " << wsm->getSenderAddress() <<
+                ". I am on duty! This is my route: " << getCourse(numberOfRoads) << std::endl;
 
         wsm->setWsmData(getCourse(numberOfRoads).c_str());
-
-//        wsm->setSecurityType(); TODO Implementar segurança
-//        wsm->setPsid(12);
-//        wsm->setPsc("Give way! Public Safety vehicle is on Duty!");
-//        wsm->setChannelNumber(Channels::CRIT_SOL);
+        wsm->setPsid(12);
+        wsm->setPsc("Give way! Public Safety vehicle is on Duty!");
+        //      wsm->setSecurityType(); TODO Implementar segurança
 
         if (dataOnSch) {
             startService(Channels::SCH2, 12, "Emergency Warning");
