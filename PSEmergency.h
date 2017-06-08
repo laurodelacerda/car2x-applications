@@ -26,13 +26,13 @@ class PSEmergency : public BaseWaveApplLayer {
         virtual void handleSelfMsg(cMessage* msg);
         virtual void handlePositionUpdate(cObject* obj);
 
-        // functions that emulate a GPS
+        // functions that simulate the behavior of a GPS
         virtual std::string formatRoad(std::string road);
         virtual std::string formatLane(int lane);
         virtual std::string getCourse(int maxNumberOfRoads);
         virtual bool onRoute(std::string course);
 
-        // functions that emulate a Driver
+        // functions that simulate the behavior of a Driver
         virtual void changeLane();
 
     };

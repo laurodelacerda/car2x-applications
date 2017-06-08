@@ -51,6 +51,8 @@ void PSEmergency::onWSM(WaveShortMessage* wsm) {
     if (onDuty == false){ // a vehicle which is not on Public Safety duty
         if (onRoute(wsm->getWsmData())) {
             changeLane();
+            std::cout << ". I am changing lane!" << std::endl;
+            // TODO Adicionar estatística para quantificar mudanças de faixa.
         }
     }
 
@@ -72,7 +74,7 @@ void PSEmergency::onWSA(WaveServiceAdvertisment* wsa) {
         currentSubscribedServiceId = wsa->getPsid();
         if  (currentOfferedServiceId != wsa->getPsid()) {
             stopService();
-            startService((Channels::ChannelNumber) wsa->getTargetChannel(), wsa->getPsid(), "Emergency Warning");
+            startService((Channels::ChannelNumber) wsa->getTargetChannel(), wsa->getPsid(), "Emergency Warning!");
         }
     }
 }
@@ -127,8 +129,8 @@ void PSEmergency::handlePositionUpdate(cObject* obj) {
                 ". I am on duty! This is my route: " << getCourse(numberOfRoads) << std::endl;
 
         wsm->setWsmData(getCourse(numberOfRoads).c_str());
-        wsm->setPsid(12);
-        wsm->setPsc("Give way! Public Safety vehicle is on Duty!");
+        //      wsm->setPsid(12);
+        //      wsm->setPsc("Give way! Public Safety vehicle is on Duty!");
         //      wsm->setSecurityType(); TODO Implementar segurança
 
         if (dataOnSch) {
