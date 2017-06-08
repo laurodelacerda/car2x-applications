@@ -3,14 +3,14 @@
 #define _PSEmergency_H_
 
 #include <omnetpp.h>
-#include <veins/modules/application/car2x/drivers/SimpleDriver.h>
-#include <veins/modules/application/car2x/gps/SimpleGPS.h>
 #include <veins/modules/application/ieee80211p/BaseWaveApplLayer.h>
 
 using namespace omnetpp;
 
 class PSEmergency : public BaseWaveApplLayer {
+
     public:
+        PSEmergency();
         virtual void initialize(int stage);
         virtual void finish();
 
@@ -18,8 +18,6 @@ class PSEmergency : public BaseWaveApplLayer {
         int numberOfRoads;
         bool onDuty;
         int currentSubscribedServiceId;
-        SimpleGPS* gps;
-        SimpleDriver* driver;
 
     protected:
         virtual void onBSM(BasicSafetyMessage* bsm);
@@ -28,6 +26,16 @@ class PSEmergency : public BaseWaveApplLayer {
 
         virtual void handleSelfMsg(cMessage* msg);
         virtual void handlePositionUpdate(cObject* obj);
+
+        // functions that emulate a GPS
+        std::string formatRoad(std::string road);
+        std::string formatLane(int lane);
+        std::string getCourse(int maxNumberOfRoads);
+        bool onRoute(std::string course);
+
+        // functions that emulate a Driver
+        void changeLane();
+
     };
 
 #endif

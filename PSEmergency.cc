@@ -1,5 +1,6 @@
 
-#include <veins/modules/application/car2x/apps/PSEmergency.h>
+#include "PSEmergency.h"
+#include <algorithm>
 
 Define_Module(PSEmergency);
 
@@ -47,9 +48,9 @@ void PSEmergency::onWSM(WaveShortMessage* wsm) {
 
     findHost()->getDisplayString().updateWith("r=16,green");
 
-    if (onDuty == false){
-        if (gps->onRoute(wsm->getWsmData())) {
-                driver->changeLane();
+    if (onDuty == false){ // a vehicle which is not on Public Safety duty
+        if (onRoute(wsm->getWsmData())) {
+            changeLane();
         }
     }
 
@@ -116,16 +117,89 @@ void PSEmergency::handlePositionUpdate(cObject* obj) {
     //member variables such as currentPosition and currentSpeed are updated in the parent class
 
     if (onDuty){
-    // @lauro: Neste caso, apenas a ambulância ficará vermelha.
+        std::cout<< "Hey, I am on duty!" << std::endl;
         findHost()->getDisplayString().updateWith("r=16,red");
+
         WaveShortMessage* wsm = new WaveShortMessage();
+
         populateWSM(wsm);
-        wsm->setWsmData(gps->getCourse(numberOfRoads).c_str());
-        //wsm->setSecurityType(); TODO Implementar segurança
-        wsm->setPsid(12);
-        wsm->setPsc("Give way! Public Safety vehicle is on Duty!");
-        wsm->setChannelNumber(Channels::CRIT_SOL);
+
+        std::cout<< getCourse(numberOfRoads) << std::endl;
+        // Adds the future course to the wsm
+
+        wsm->setWsmData(getCourse(numberOfRoads).c_str());
+
+//        wsm->setSecurityType(); TODO Implementar segurança
+//        wsm->setPsid(12);
+//        wsm->setPsc("Give way! Public Safety vehicle is on Duty!");
+//        wsm->setChannelNumber(Channels::CRIT_SOL);
+
+        if (dataOnSch) {
+            startService(Channels::SCH2, 12, "Emergency Warning");
+            //started service and server advertising, schedule message to self to send later
+            scheduleAt(computeAsynchronousSendingTime(1,type_SCH),wsm);
+        }
+        else {
+            //send right away on CCH, because channel switching is disabled
+            sendDown(wsm);
+        }
     }
 
+}
 
+std::string PSEmergency::formatRoad(std::string road) {
+    return "[" + road + "]";
+}
+
+std::string PSEmergency::formatLane(int lane) {
+    return "(" + std::to_string(lane) + ")";
+}
+
+std::string PSEmergency::getCourse(int maxNumberOfRoads) {
+    //TODO Verificar o que ocorre quando a Rota Planejada é alterada em tempo de execução
+    std::list<std::string> route = traciVehicle->getPlannedRoadIds();
+    std::string roadInTransit = formatRoad(traciVehicle->getRoadId());
+    std::string formattedCourse = "";
+
+    int addedRoads = 0;
+    bool addInMessage = false;
+
+    //TODO Melhorar lógica
+    for (std::list<std::string>::iterator roadId = route.begin(); roadId != route.end(); ++roadId) {
+        std::string road = formatRoad(*roadId);
+        if (road == roadInTransit)
+            addInMessage = true;
+
+        if (addInMessage) {
+            if (addedRoads < maxNumberOfRoads) {
+                formattedCourse = formattedCourse + road;
+                addedRoads++;
+            } else {
+                break;
+            }
+        }
+    }
+
+    formattedCourse = formatLane(traciVehicle->getLaneIndex())
+            + formattedCourse;
+
+    return formattedCourse;
+}
+
+bool PSEmergency::onRoute(std::string course) {
+
+    std::string roadInTransit = formatRoad(traciVehicle->getRoadId());
+    std::string laneInTransit = formatLane(traciVehicle->getLaneIndex());
+
+    if (course.find(roadInTransit) != std::string::npos)
+        if (course.find(laneInTransit) != std::string::npos)
+            return true; //on route
+
+    return false; //not on route
+}
+
+void PSEmergency::changeLane() {
+    if (traciVehicle->getLaneIndex() > 0) {
+        traciVehicle->changeLane(traciVehicle->getLaneIndex()-1, 0);
+    }
 }
